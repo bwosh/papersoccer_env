@@ -168,7 +168,7 @@ class Board():
         font_size = 0.8*self.draw_size/15
         spacing = int(np.ceil(2 *self.draw_size/15))
         cv2.putText(img,f"M:{self.moves} P:{self.player_to_move} ({self.ball_pos[1]},{self.ball_pos[0]})",(self.draw_size-1, self.draw_size-spacing), cv2.FONT_HERSHEY_PLAIN, font_size, (255,255,255))
-        cv2.putText(img,f"fb_env 1.0",(self.draw_size-1, img.shape[0]-spacing), cv2.FONT_HERSHEY_PLAIN, font_size, (255,255,255))
+        cv2.putText(img,f"papersoccer_env",(self.draw_size-1, img.shape[0]-spacing), cv2.FONT_HERSHEY_PLAIN, font_size, (255,255,255))
         return img
     
     @staticmethod

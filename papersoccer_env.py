@@ -1,6 +1,20 @@
 import cv2
 import numpy as np
 
+from base64 import b64encode
+
+def get_coord_table():
+    return {
+            "TL": (-1, -1, 4, -1, -1),
+            "T":  (-1,  0, 2, -1,  0),
+            "TR": (-1,  0, 3, -1,  1),
+            "L":  ( 0, -1, 1,  0, -1),
+            "R":  ( 0,  0, 1,  0,  1),
+            "BL": ( 0, -1, 3,  1, -1),
+            "B":  ( 0,  0, 2,  1,  0),
+            "BR": ( 0,  0, 4,  1,  1) 
+        }
+
 class SinlgeBlock:
     def __init__(self, value=0, draw_size = 15):
         self.value = value
@@ -106,16 +120,15 @@ class Board():
         self.data[(self.ball_pos[0]) * self.width + self.ball_pos[1]].value = 1
         
         # coords table (offset y, offset x, value chenge in terms of power of 2, move dy, move dx)
-        self.coords_table = {
-            "TL": (-1, -1, 4, -1, -1),
-            "T":  (-1,  0, 2, -1,  0),
-            "TR": (-1,  0, 3, -1,  1),
-            "L":  ( 0, -1, 1,  0, -1),
-            "R":  ( 0,  0, 1,  0,  1),
-            "BL": ( 0, -1, 3,  1, -1),
-            "B":  ( 0,  0, 2,  1,  0),
-            "BR": ( 0,  0, 4,  1,  1) 
-        }
+        self.coords_table = get_coord_table()
+
+    def get_compact_state(self):
+        return ",".join([str(d.value) for d in self.data])
+
+    def get_b64_state(self):
+        values = [d.value for d in self.data]
+        values = np.array(values, dtype='uint8')
+        return str(b64encode(values))[2:-1]
 
     def copy(self):
         result = Board(self.width-2, self.height-2, draw_size=self.draw_size)
@@ -222,3 +235,6 @@ class Board():
         if verbose:
             print(sb.possible_moves())
         return sb, states[-1], Board.merge_images(states)
+        
+        
+    

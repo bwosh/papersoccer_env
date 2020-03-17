@@ -30,7 +30,7 @@ For quick start you can check [this notebook](env.ipynb).
 
 ## License
 Code author: 
-- [Błazej Matuszewski](https://github.com/bwosh)
+- [Błażej Matuszewski](https://github.com/bwosh)
 
 The project is licensed upon:  
 [Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)  

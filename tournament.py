@@ -13,9 +13,9 @@ def play_game(playerA, playerB, max_moves, draw_score = 0.5):
         valid_move, next_player, winner = board.move(move)
         sequence.append(move)
         if winner is not None:
-            return i, winner, sequence       
+            return i, winner, sequence, board      
         
-    return max_moves, draw_score, sequence
+    return max_moves, draw_score, sequence, board 
 
 def play_tournament(players, rounds=100, max_moves=1000, draw_score=0.5, progress_lambda=lambda x:x):
     
@@ -29,10 +29,10 @@ def play_tournament(players, rounds=100, max_moves=1000, draw_score=0.5, progres
         for pa, playerA in enumerate(players):
             for pb, playerB in enumerate(players):
                 if pa<pb:
-                    moves, pointsA, sequence = play_game(playerA, playerB, max_moves, draw_score=draw_score)
+                    moves, pointsA, sequence, _ = play_game(playerA, playerB, max_moves, draw_score=draw_score)
                     history.append( (playerA.get_name(), playerB.get_name(), pointsA, sequence) )
                     
-                    moves, pointsB,_ = play_game(playerB, playerA, max_moves, draw_score=draw_score)
+                    moves, pointsB, sequence, _ = play_game(playerB, playerA, max_moves, draw_score=draw_score)
                     history.append( (playerB.get_name(), playerA.get_name(), pointsB, sequence) )
                     
                     points[playerA.get_name()] += pointsA + (1-pointsB)

@@ -5,7 +5,10 @@ class SinlgeBlock:
     def __init__(self, value=0, draw_size = 15):
         self.value = value
         self.draw_size = draw_size
-        
+
+    def copy(self):
+        return SinlgeBlock(self.value, self.draw_size)
+
     def decode(self):
         # 0 is in TL
         # 1 top
@@ -28,33 +31,36 @@ class SinlgeBlock:
         
         img = np.ones((self.draw_size, self.draw_size,3), dtype='uint8')*board
         
-
-        
         is_in_tl,top_occupied, left_occupied, slash_occupied, backslash_occupied = self.decode()
         
+        # TOP Line
         color = can_occupy
         if top_occupied:
             color = occupied
         cv2.line(img,(0,0),(self.draw_size-1, 0), color )
         
+        # LEFT Line
         color = can_occupy
         if left_occupied:
             color = occupied
         cv2.line(img,(0,0),(0, self.draw_size-1), color )
         
+        # SLASH line
         color = can_occupy
         if slash_occupied:
             color = occupied
         cv2.line(img,(0,self.draw_size),(self.draw_size-1,0), color )
         color = can_occupy
         
+        # BACKSLASH Line
         if backslash_occupied:
             color = occupied
         cv2.line(img,(0,0),(self.draw_size-1,self.draw_size-1), color )
         
+        # BALL in the TOP LEFT field
         color = can_occupy
         if is_in_tl:
-            cv2.rectangle(img,(0,0),(1,1), ball,1 )
+            cv2.rectangle(img,(0,0),(1,1), ball, 1 )
         
         return img  
     
@@ -66,9 +72,9 @@ class Board():
         self.ball_pos = (height//2+1, width//2+1)
         self.player_to_move = 0
         self.moves = 0
+        self.data = []
         
         # Init start position
-        self.data = []
         for row in range(self.height):
             for col in range(self.width):
                 block = SinlgeBlock(30, draw_size = draw_size)
@@ -90,22 +96,36 @@ class Board():
         self.data[(self.height-2) * self.width + self.width//2].value = 0
         self.data[(self.height-2) * self.width + self.width//2-1].value = 4
         
-        # TODO set winning locations
+        # set winning locations
+        self.winning_positions = {
+            0: [(self.width//2,1),(self.width//2-1,1),(self.width//2+1,1)],
+            1: [(self.width//2,self.height-1),(self.width//2-1,self.height-1),(self.width//2+1,self.height-1)]
+        }
 
         # ball
         self.data[(self.ball_pos[0]) * self.width + self.ball_pos[1]].value = 1
         
-        # coords table (offset y, offset x, power of 2, dy, dx)
-        self.coords_table ={
-            "TL":(-1,-1,4,-1,-1),
-            "T":(-1,0,2,-1,0),
-            "TR":(-1,0,3,-1,1),
-            "L":(0,-1,1,0,-1),
-            "R":(0,0,1,0,1),
-            "BL":(0,-1,3,1,-1),
-            "B":(0,0,2,1,0),
-            "BR":(0,0,4,1,1) 
+        # coords table (offset y, offset x, value chenge in terms of power of 2, move dy, move dx)
+        self.coords_table = {
+            "TL": (-1, -1, 4, -1, -1),
+            "T":  (-1,  0, 2, -1,  0),
+            "TR": (-1,  0, 3, -1,  1),
+            "L":  ( 0, -1, 1,  0, -1),
+            "R":  ( 0,  0, 1,  0,  1),
+            "BL": ( 0, -1, 3,  1, -1),
+            "B":  ( 0,  0, 2,  1,  0),
+            "BR": ( 0,  0, 4,  1,  1) 
         }
+
+    def copy(self):
+        result = Board(self.width-2, self.height-2, draw_size=self.draw_size)
+        result.ball_pos = (self.ball_pos[0],self.ball_pos[1])
+
+        result.player_to_move = self.player_to_move 
+        result.moves = self.moves
+        result.data = [d.copy() for d in self.data]
+
+        return result
      
     def possible_moves(self):
         result ={}
@@ -140,15 +160,17 @@ class Board():
         for key in new_moves:
             if not new_moves[key]:
                 blocked_ways+=1
-        change_player = (blocked_ways==1)
-        
+        change_player = (blocked_ways==1)       
         
         # Check winner (no move)
         if blocked_ways==8:
             return True, None, 1 - self.player_to_move
         
         # Check winner (goal)
-        # TODO
+        for potential_winner in self.winning_positions:
+            for x,y in self.winning_positions[potential_winner]:
+                if x == self.ball_pos[1] and y == self.ball_pos[0]:
+                    return True, None, potential_winner
         
         if change_player:
             self.player_to_move = 1 - self.player_to_move

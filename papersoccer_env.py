@@ -125,6 +125,21 @@ class Board():
     def get_compact_state(self):
         return ",".join([str(d.value) for d in self.data])
 
+    def __to_binary(self, val):
+        return [
+            int(val&1>0),
+            int(val&2>0),
+            int(val&4>0),
+            int(val&8>0),
+            int(val&16>0)
+        ]
+
+    def get_binary_state(self):
+        result = []
+        for b in [self.__to_binary(d.value) for d in self.data]:
+            result += b 
+        return np.array(result)
+
     def get_b64_state(self):
         values = [d.value for d in self.data]
         values = np.array(values, dtype='uint8')

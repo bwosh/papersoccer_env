@@ -5,6 +5,7 @@ from papersoccer_env import Board
 from actors import Actor, RandomActor, GreedyActor, TryOnlyBestActor
 from tournament import play_game, play_tournament
 from sequence import encode_moves, decode_moves
+from helpers import max_dict
 
 from tqdm import tqdm
 
@@ -12,18 +13,28 @@ class MonteCarloActor(Actor):
     def __init__(self, name):
         super(MonteCarloActor, self).__init__("MonteCarlo_"+name)
 
-        self.gamma=0.99
+        self.gamma=0.9
 
         # global knowledge
-        self.V = {}
+        self.Q = {}
+        self.deltas = []
         self.returns = {}
+        self.saved_policy = {}
 
     def policy(self, board, is_first_move): # TODO is_first_move
         actions_dict = board.possible_moves()
+        state = board.get_b64_state()
         actions = []
         for key in actions_dict:
             if actions_dict[key]:
                 actions.append(key)
+
+        if state in self.saved_policy:
+            action = self.saved_policy[state]
+            if action in actions:
+                return action
+            else:
+                print("Policy returned invalid move.")
 
         # pick random
         action = actions[np.random.randint(0,len(actions))]
@@ -32,23 +43,26 @@ class MonteCarloActor(Actor):
     def move(self, board):
         is_first_move = (len(self.states_actions_rewards)==0)
         action = self.policy(board, is_first_move)
-
-        #if is_first_move:
-        #    state = board.get_b64_state()
-        #    self.states_actions_rewards.append((state, action, 0))
-
         return action
 
     def new_game(self):
-        print("New game")
         self.states_actions_rewards = []
 
     def state_hash(self, state):
         return zlib.crc32(state.encode())
+    
+    def __getQ(self, Q,s,a):
+        if s in self.Q:
+            if a in self.Q[s]:
+                return self.Q[s][a]
+            self.Q[s][a] = 0
+            return self.Q[s][a]
+        else:
+            self.Q[s] = {}
+            self.Q[s][a] = 0
+            return self.Q[s][a]
 
     def end_game(self):
-        print("End game")
-
         G = 0
         states_actions_returns = []
         first = True
@@ -60,22 +74,51 @@ class MonteCarloActor(Actor):
             G = r + self.gamma * G
         states_actions_returns.reverse() 
 
-        return states_actions_returns
+        seen_state_action_pairs = set()
+        biggest_change = 0
+        for s, a, G in states_actions_returns:
+            sa = (s, a)
+            #if sa not in seen_state_action_pairs:
+            if (s,a) not in self.returns:
+                self.returns[(s,a)] = []
+            old_q = self.__getQ(self.Q,s,a)
+            self.returns[sa].append(G)
+            new_q = np.mean(self.returns[sa])
+            self.Q[s][a] = new_q
+            biggest_change = max(biggest_change, np.abs(old_q - new_q))
+            seen_state_action_pairs.add(sa)
+
+        self.deltas.append(biggest_change)
+
+        # update policy
+        all_states = set([s for s,_ in seen_state_action_pairs])
+        for s in all_states:
+            old = None
+            if s in self.saved_policy:
+                old = self.saved_policy[s] 
+
+            self.saved_policy[s] = max_dict(self.Q[s])[0]
+
+            if old is not None and old != self.saved_policy[s]:
+                print(old,"==>", self.saved_policy[s] )
 
     def save_reward(self, state, action, reward):
         self.states_actions_rewards.append((state, action, reward))
-        print("Save reward. Number = ", len(self.states_actions_rewards), action, reward)
 
 # Single game
-max_moves, draw_score, sequence, board, (states_actions_returns,_) = play_game(MonteCarloActor("1"), RandomActor("2"), max_moves=1000)
-
-for s,a,G in states_actions_returns:
-    print(f"{a:<3} {G:-2.5f}")
+games = 100000
+player_a = MonteCarloActor("A")
+player_b = RandomActor("B")
+progress = tqdm(range(games),desc="Gathering experience...")
+for game in progress:
+    play_game(player_a, player_b, max_moves=1000)
+    progress.set_description(f"{np.mean(player_a.deltas[-1000:]):.5f} {len(player_a.returns)} {len(player_a.Q)}")
 
 # Tournament
-#actors = []
-#actors.append(RandomActor("1"))
+actors = []
+actors.append(RandomActor("1"))
 #actors.append(TryOnlyBestActor("2"))
 #actors.append(GreedyActor("3"))
-#points, history = play_tournament(actors, rounds=100, progress_lambda=tqdm)
-#print(points)
+actors.append(player_a)
+points, history = play_tournament(actors, rounds=100, progress_lambda=tqdm)
+print(points)

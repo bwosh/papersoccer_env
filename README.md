@@ -7,10 +7,6 @@ https://en.wikipedia.org/wiki/Paper_soccer
 
 ![sample image](assets/sample.png)  
 
-## TODO LIST
-[ ] Implement winning by goal  
-[ ] Expose board data in more convinient way (for now it's bit-encoded list)  
-
 ## Dependencies
 Image preview is implemented and it depends on:
 - opencv

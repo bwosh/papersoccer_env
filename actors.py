@@ -11,6 +11,15 @@ class Actor():
     def move(self, board):
         raise Exception("move(...): Not implemented")
 
+    def save_reward(self, state, action, reward):
+        pass
+
+    def new_game(self):
+        pass
+
+    def end_game(self):
+        pass
+
 
 class RandomActor(Actor):
     def __init__(self, name):

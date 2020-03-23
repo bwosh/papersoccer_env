@@ -1,3 +1,6 @@
+# This file is not considered FINISHED.
+# Use at YOUR OWN RISK ;)
+
 import numpy as np
 import zlib
 
@@ -21,7 +24,7 @@ class MonteCarloActor(Actor):
         self.returns = {}
         self.saved_policy = {}
 
-    def policy(self, board, is_first_move): # TODO is_first_move
+    def policy(self, board, is_first_move):
         actions_dict = board.possible_moves()
         state = board.get_b64_state()
         actions = []
@@ -78,7 +81,6 @@ class MonteCarloActor(Actor):
         biggest_change = 0
         for s, a, G in states_actions_returns:
             sa = (s, a)
-            #if sa not in seen_state_action_pairs:
             if (s,a) not in self.returns:
                 self.returns[(s,a)] = []
             old_q = self.__getQ(self.Q,s,a)

@@ -29,5 +29,4 @@ Code author:
 - [Błażej Matuszewski](https://github.com/bwosh)
 
 The project is licensed upon:  
-[Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)  
-[![BY-NC-SA-4.0](./assets/by-nc-sa.png)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+MIT License
